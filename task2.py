@@ -110,21 +110,57 @@ class Bob:
         print("Bob received: " + decrypted_message.decode("ascii"))
         return decrypted_message.decode("ascii")
 
+class Mallory: 
+    shared_secret = None
+    q = None
 
+    def __init__(self, q):
+        self.q = q
+
+    def intercept_public_key(self):
+        self.shared_secret = 0
+        return self.q
+    
+    def change_generator_one(self):
+        self.shared_secret = 1
+        return 1
+
+    def change_generator_q(self):
+        self.shared_secret = 0
+        return self.q
+
+    def change_generator_q_minus_one(self):
+        self.shared_secret = 1
+        return self.q - 1
+
+    def decrypt_message(self, ciphertext):
+        if self.shared_secret is None:
+            raise ValueError("Shared secret has not been generated yet.")
+        key = SHA256.new(str(self.shared_secret).encode()).digest()[:16]
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        decrypted_padded_message = cipher.decrypt(ciphertext)
+
+        # undo padding
+        padding_length = decrypted_padded_message[-1]
+        decrypted_message = decrypted_padded_message[:-padding_length]
+
+        print("Mallory intercepted and decrypted: " + decrypted_message.decode("ascii"))
+        return decrypted_message.decode("ascii")
     
 
 
-
-# Diffie-Hellman Key Exchange
+# Mallory intercepts public keys
 alice = Alice(private_key_1)
 bob = Bob(private_key_2)
+
+mallory = Mallory(q)
 
 alice_pub_key = alice.generate_public_key(q, g)
 bob_pub_key = bob.generate_public_key(q, g)
 
 ### Mallory intervenes
-bob_pub_key = q
-alice_pub_key = q
+bob_pub_key = mallory.intercept_public_key()
+alice_pub_key = mallory.intercept_public_key()
 
 alice.generate_shared_secret(bob_pub_key)
 bob.generate_shared_secret(alice_pub_key)
@@ -132,24 +168,97 @@ bob.generate_shared_secret(alice_pub_key)
 alice.generate_key()
 bob.generate_key()
 
-encrypted_message = alice.encrypt_message("Hello Bob, this is Alice!")
-print("Encrypted message from Alice to Bob:", ''.join([hex(x)[2:].zfill(2) for x in encrypted_message]))
-
+encrypted_message = alice.encrypt_message("Oh no! Mallory intercepted the public keys!")
 
 # Mallory knows the secret will be 0, (since she changed the public keys to q), so she can compute the key and decrypt the message
-mallory_secret = 0
-mallory_key = SHA256.new(str(mallory_secret).encode()).digest()[:16]
-mallory_cipher = AES.new(mallory_key, AES.MODE_CBC, iv)
-mallory_decrypted_padded_message = mallory_cipher.decrypt(encrypted_message)
-mallory_padding_length = mallory_decrypted_padded_message[-1]
-mallory_decrypted_message = mallory_decrypted_padded_message[:-mallory_padding_length]
-print("\nMallory intercepted and decrypted: " + mallory_decrypted_message.decode("ascii"))
+mallory.decrypt_message(encrypted_message)
 
 
 bob.decrypt_message(encrypted_message)
 
-secret_message_bob = bob.encrypt_message("Hello Alice, this is Bob!")
-print("\nEncrypted message from Bob to Alice:", ''.join([hex(x)[2:].zfill(2) for x in secret_message_bob]))
 
-alice.decrypt_message(secret_message_bob)
+print("\n\n\n")
 
+
+# Mallory replaces the generator with 1
+alice = Alice(private_key_1)
+bob = Bob(private_key_2)
+
+mallory = Mallory(q)
+
+### Mallory intervenes
+g = mallory.change_generator_one()
+
+alice_pub_key = alice.generate_public_key(q, g)
+bob_pub_key = bob.generate_public_key(q, g)
+
+alice.generate_shared_secret(bob_pub_key)
+bob.generate_shared_secret(alice_pub_key)
+
+alice.generate_key()
+bob.generate_key()
+
+encrypted_message = alice.encrypt_message("Oh no! Mallory changed the generator to 1!")
+
+# Mallory knows the secret will be 1, (since she changed the generator to 1)
+mallory.decrypt_message(encrypted_message)
+
+bob.decrypt_message(encrypted_message)
+
+
+print("\n\n\n")
+
+
+# Mallory replaces the generator with q
+alice = Alice(private_key_1)
+bob = Bob(private_key_2)
+
+mallory = Mallory(q)
+
+### Mallory intervenes
+g = mallory.change_generator_q()
+
+alice_pub_key = alice.generate_public_key(q, g)
+bob_pub_key = bob.generate_public_key(q, g)
+
+alice.generate_shared_secret(bob_pub_key)
+bob.generate_shared_secret(alice_pub_key)
+
+alice.generate_key()
+bob.generate_key()
+
+encrypted_message = alice.encrypt_message("Oh no! Mallory changed the generator to q!")
+
+# Mallory knows the secret will be 0, (since she changed the generator to q)
+mallory.decrypt_message(encrypted_message)
+
+bob.decrypt_message(encrypted_message)
+
+
+print("\n\n\n")
+
+
+# Mallory replaces the generator with q - 1
+alice = Alice(private_key_1)
+bob = Bob(private_key_2)
+
+mallory = Mallory(q)
+
+### Mallory intervenes
+g = mallory.change_generator_q_minus_one()
+
+alice_pub_key = alice.generate_public_key(q, g)
+bob_pub_key = bob.generate_public_key(q, g)
+
+alice.generate_shared_secret(bob_pub_key)
+bob.generate_shared_secret(alice_pub_key)
+
+alice.generate_key()
+bob.generate_key()
+
+encrypted_message = alice.encrypt_message("Oh no! Mallory changed the generator to q-1!")
+
+# Mallory knows the secret will be 1, (since she changed the generator to q-1)
+mallory.decrypt_message(encrypted_message)
+
+bob.decrypt_message(encrypted_message)
