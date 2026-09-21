@@ -64,11 +64,7 @@ def int_to_message(message_int):
     return message_int.to_bytes(bytes_length, byteorder='big').decode('ascii')
 
 def RSA_encrypt_text(message, public_key):
-    """Encrypt a message using the RSA public key"""
-    # e, n = public_key
-    # message_int = int.from_bytes(message.encode('ascii'), byteorder='big')
-    # ciphertext_int = pow(message_int, e, n)
-    # return ciphertext_int
+    """Encrypt message using RSA public key"""
     return RSA_encrypt(message_to_int(message), public_key)
 
 def RSA_decrypt_text(ciphertext_int, private_key):
@@ -217,15 +213,16 @@ e = 65537
 
 alice_rsa_public_key, alice_rsa_private_key = RSA_keygen(p, q, e)
 
-# encrypted_message = RSA_encrypt_text("Hello, this is a secret message!", public_key)
-# print("Encrypted message:", encrypted_message)
-
-# decrypted_message = RSA_decrypt_text(encrypted_message, private_key)
-# print("Decrypted message:", decrypted_message)
-
 alice = Alice(alice_rsa_public_key, alice_rsa_private_key)
 bob = Bob()
 mallory = Mallory()
+
+test = "This is a secret message!"
+encrypted_message = RSA_encrypt_text(test, alice_rsa_public_key)
+decrypted_message = RSA_decrypt_text(encrypted_message, alice_rsa_private_key)
+print("Orginal Message: ", test)
+print("Encrypted Message: ", encrypted_message)
+print("Decrypted Message: ", decrypted_message)
 
 # RSA handshake
 bob_secret = bob.send_secret(alice.public_key)
@@ -233,6 +230,10 @@ intercepted_secret = mallory.intercept_and_replace_secret(alice.public_key) # Ma
 alice.receive_secret(intercepted_secret) # Alice receives the intercepted secret
 
 alice.generate_key()
+print("Bob's original secret: ", bob.secret)
+print("Mallory's secret: ", mallory.secret)
+print("Alice's secret: ", alice.secret)
+print("Mallory knows secret of Alice: ", mallory.secret == alice.secret)
 
 # Conversation with AES-CBC
 encrypted_message = alice.encrypt_message("Hi Bob!")

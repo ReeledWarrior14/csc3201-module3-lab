@@ -112,7 +112,7 @@ bob = Bob(private_key_2)
 alice_pub_key = alice.generate_public_key(q,g)
 bob_pub_key = bob.generate_public_key(q,g)
 
-alice.generate_shared_secret(bob_public_key)
+alice.generate_shared_secret(bob_pub_key)
 bob.generate_shared_secret(alice_pub_key)
 
 print("Alice's shared secret: ", alice.shared_secret)
