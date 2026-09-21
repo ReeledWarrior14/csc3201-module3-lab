@@ -168,13 +168,23 @@ bob.generate_shared_secret(alice_pub_key)
 alice.generate_key()
 bob.generate_key()
 
+#do Alice and Bob think they have the same shared secret
+print("\npublic key replacement")
+print("Alice shared secret: ", alice.shared_secret)
+print("Bob shared secret: ", bob.shared_secret)
+print("Shared secrets match! ", alice.shared_secret == bob.shared_secret)
+
 encrypted_message = alice.encrypt_message("Oh no! Mallory intercepted the public keys!")
 
 # Mallory knows the secret will be 0, (since she changed the public keys to q), so she can compute the key and decrypt the message
 mallory.decrypt_message(encrypted_message)
 
-
 bob.decrypt_message(encrypted_message)
+
+#mallory can decrypt in both ways
+secret_message_bob = bob.encrypt_message("Bob's message has been intercepted!")
+mallory.decrypt_message(secret_message_bob)
+alice.decrypt_message(secret_message_bob)
 
 
 print("\n\n\n")
@@ -198,6 +208,11 @@ bob.generate_shared_secret(alice_pub_key)
 alice.generate_key()
 bob.generate_key()
 
+print("\nGenerator Attack")
+print("Alice shared secret: ", alice.shared_secret)
+print("Bob shared secret: ", bob.shared_secret)
+print("Shared secrets match! ", alice.shared_secret == bob.shared_secret)
+
 encrypted_message = alice.encrypt_message("Oh no! Mallory changed the generator to 1!")
 
 # Mallory knows the secret will be 1, (since she changed the generator to 1)
@@ -205,6 +220,10 @@ mallory.decrypt_message(encrypted_message)
 
 bob.decrypt_message(encrypted_message)
 
+#bob to Alice
+secret_message_bob = bob.encrypt_message("Bob's message has been intercepted with g = 1")
+mallory.decrypt_message(secret_message_bob)
+alice.decrypt_message(secret_message_bob)
 
 print("\n\n\n")
 
@@ -227,12 +246,21 @@ bob.generate_shared_secret(alice_pub_key)
 alice.generate_key()
 bob.generate_key()
 
+print("\nGenerator Attack: g=q")
+print("Alice shared secret: ", alice.shared_secret)
+print("Bob shared secret: ", bob.shared_secret)
+print("Shared secrets match! ", alice.shared_secret == bob.shared_secret)
+
 encrypted_message = alice.encrypt_message("Oh no! Mallory changed the generator to q!")
 
 # Mallory knows the secret will be 0, (since she changed the generator to q)
 mallory.decrypt_message(encrypted_message)
 
 bob.decrypt_message(encrypted_message)
+
+secret_message_bob = bob.encrypt_message("Bob's message has been intercepted with g=q")
+mallory.decrypt_message(secret_message_bob)
+alice.decrypt_message(secret_message_bob)
 
 
 print("\n\n\n")
@@ -256,9 +284,21 @@ bob.generate_shared_secret(alice_pub_key)
 alice.generate_key()
 bob.generate_key()
 
+print("\nGenerator Attack: g=q-1")
+print("Alice public key: ", alice_pub_key)
+print("Bob public key: ", bob_pub_key)
+print("Alice shared secret: ", alice.shared_secret)
+print("Bob shared secret: ", bob.shared_secret)
+print("Shared secrets match! ", alice.shared_secret == bob.shared_secret)
+
 encrypted_message = alice.encrypt_message("Oh no! Mallory changed the generator to q-1!")
 
 # Mallory knows the secret will be 1, (since she changed the generator to q-1)
 mallory.decrypt_message(encrypted_message)
 
 bob.decrypt_message(encrypted_message)
+
+secret_message_bob = bob.encrypt_message("Bob's message has been intercepted with g = q-1")
+mallory.decrypt_message(secret_message_bob)
+
+alice.decrypt_message(secret_message_bob)
